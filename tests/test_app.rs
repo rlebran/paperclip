@@ -9,6 +9,9 @@ use actix_web::{
     dev::{MessageBody, Payload, ServiceRequest, ServiceResponse},
     App, Error, FromRequest, HttpRequest, HttpServer, Responder,
 };
+use actix_web_validator::{
+    Json as ValidatedJson, Path as ValidatedPath, Query as ValidatedQuery, Validate,
+};
 use futures::future::{ok as fut_ok, ready, Future, Ready};
 use once_cell::sync::Lazy;
 use paperclip::{
@@ -346,7 +349,7 @@ fn test_simple_app() {
 #[test]
 #[allow(dead_code)]
 fn test_params() {
-    #[derive(Deserialize, Apiv2Schema)]
+    #[derive(Deserialize, Apiv2Schema, Validate)]
     struct KnownResourceBadge {
         resource: String,
         name: String,
@@ -369,13 +372,19 @@ fn test_params() {
         pub String,
     );
 
-    #[derive(Deserialize, Apiv2Schema)]
+    /// KnownBadge Id4 Doc
+    #[derive(Serialize, Deserialize, Validate, Apiv2Schema)]
+    struct KnownBadgeId4 {
+        id: String,
+    }
+
+    #[derive(Deserialize, Apiv2Schema, Validate)]
     struct BadgeParams {
         res: Option<u16>,
         colors: Vec<String>,
     }
 
-    #[derive(Deserialize, Apiv2Schema)]
+    #[derive(Deserialize, Apiv2Schema, Validate)]
     struct BadgeBody {
         /// JSON value
         json: Option<serde_json::Value>,
@@ -448,6 +457,11 @@ fn test_params() {
     }
 
     #[api_v2_operation]
+    fn get_known_badge_5(_p1: ValidatedPath<KnownBadgeId4>) -> impl Future<Output = &'static str> {
+        ready("")
+    }
+
+    #[api_v2_operation]
     fn post_badge_1(
         _p: web::Path<KnownResourceBadge>,
         _q: web::Query<BadgeParams>,
@@ -476,6 +490,22 @@ fn test_params() {
     fn patch_badge_3(
         _p: web::Path<u32>,
         _b: web::Json<BadgeBodyPatch>,
+    ) -> impl Future<Output = &'static str> {
+        ready("")
+    }
+
+    #[api_v2_operation]
+    fn post_badge_4(
+        _p: web::Path<u32>,
+        _b: ValidatedJson<BadgeBody>,
+    ) -> impl Future<Output = &'static str> {
+        ready("")
+    }
+
+    #[api_v2_operation]
+    fn patch_badge_4(
+        _p: ValidatedPath<KnownResourceBadge>,
+        _q: ValidatedQuery<BadgeParams>,
     ) -> impl Future<Output = &'static str> {
         ready("")
     }
@@ -509,9 +539,18 @@ fn test_params() {
                                         .route(web::get().to(get_known_badge_4)),
                                 )
                                 .service(
+                                    web::resource("/v/{id}/{id2}/{id3}/{id4}")
+                                        .route(web::get().to(get_known_badge_5)),
+                                )
+                                .service(
                                     web::resource("/v")
                                         .route(web::post().to(post_badge_3))
                                         .route(web::patch().to(patch_badge_3)),
+                                )
+                                .service(
+                                    web::resource("/v_")
+                                        .route(web::post().to(post_badge_4))
+                                        .route(web::patch().to(patch_badge_4)),
                                 )
                                 .service(
                                     web::resource("/foo").route(web::get().to(get_resource_2)),

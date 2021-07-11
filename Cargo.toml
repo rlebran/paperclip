@@ -45,6 +45,7 @@ once_cell = "1.4"
 [dev-dependencies]
 actix-rt = "1"
 actix-service = "1"
+actix-web-validator = { version = "2.1" }
 actix-web = { version = "3", default-features = false }
 chrono_dev = { version = "0.4", features = ["serde"], package = "chrono" }
 futures = "0.3"
@@ -53,6 +54,7 @@ reqwest = { version = "0.10", features = ["blocking", "json"] }
 log = { version = "0.4", features = ["kv_unstable"] }
 insta = "1.0"
 env_logger = "0.8"
+validator = { version = "0.12", features = ["derive"] }
 
 [features]
 # actix-web support
@@ -73,7 +75,7 @@ v2 = ["paperclip-macros/v2", "paperclip-core/v2"]
 actix-multipart = ["paperclip-core/actix-multipart"]
 actix-session = ["paperclip-core/actix-session"]
 actix-files = ["paperclip-core/actix-files"]
-actix-web-validator = ["paperclip-core/actix-web-validator"]
+actix-validator = ["paperclip-core/actix-validator"]
 chrono = ["paperclip-core/chrono"]
 rust_decimal = ["paperclip-core/rust_decimal"]
 uuid = ["paperclip-core/uuid"]
@@ -97,4 +99,4 @@ required-features = ["v2", "codegen"]
 
 [[test]]
 name = "test_app"
-required-features = ["cli", "actix", "uuid", "chrono"]
+required-features = ["cli", "actix", "uuid", "chrono", "actix-validator"]

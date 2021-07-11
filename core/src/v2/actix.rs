@@ -15,17 +15,14 @@ use actix_web::{
 };
 use pin_project::pin_project;
 
+#[cfg(feature = "actix-validator")]
+use actix_web_validator::{
+    Json as ValidatedJson, Path as ValidatedPath, QsQuery as ValidatedQsQuery,
+    Query as ValidatedQuery,
+};
 use serde::Serialize;
 #[cfg(feature = "serde_qs")]
 use serde_qs::actix::QsQuery;
-#[cfg(feature = "actix-web-validator")]
-use actix_web_validator::{Query as ValidatedQuery};
-#[cfg(feature = "actix-web-validator")]
-use actix_web_validator::{Path as ValidatedPath};
-#[cfg(feature = "actix-web-validator")]
-use actix_web_validator::{Json as ValidatedJson};
-#[cfg(feature = "actix-web-validator")]
-use actix_web_validator::{QsQuery as ValidatedQsQuery};
 
 use std::{
     collections::BTreeMap,
@@ -281,7 +278,7 @@ where
     }
 }
 
-#[cfg(feature = "actix-web-validator")]
+#[cfg(all(feature = "actix-validator", feature = "nightly"))]
 impl<T> Apiv2Schema for ValidatedJson<T> {
     default const NAME: Option<&'static str> = None;
 
@@ -290,7 +287,7 @@ impl<T> Apiv2Schema for ValidatedJson<T> {
     }
 }
 
-#[cfg(feature = "actix-web-validator")]
+#[cfg(feature = "actix-validator")]
 impl<T: Apiv2Schema> Apiv2Schema for ValidatedJson<T> {
     const NAME: Option<&'static str> = T::NAME;
 
@@ -299,10 +296,10 @@ impl<T: Apiv2Schema> Apiv2Schema for ValidatedJson<T> {
     }
 }
 
-#[cfg(feature = "actix-web-validator")]
+#[cfg(feature = "actix-validator")]
 impl<T> OperationModifier for ValidatedJson<T>
-    where
-        T: Apiv2Schema,
+where
+    T: Apiv2Schema,
 {
     fn update_parameter(op: &mut DefaultOperationRaw) {
         op.parameters.push(Either::Right(Parameter {
@@ -442,14 +439,59 @@ impl_param_extractor!(Query<T> => Query);
 impl_param_extractor!(Form<T> => FormData);
 #[cfg(feature = "serde_qs")]
 impl_param_extractor!(QsQuery<T> => Query);
-#[cfg(feature = "actix-web-validator")]
+#[cfg(feature = "actix-validator")]
 impl_param_extractor!(ValidatedPath<T> => Path);
-#[cfg(feature = "actix-web-validator")]
+#[cfg(feature = "actix-validator")]
 impl_param_extractor!(ValidatedQuery<T> => Query);
-#[cfg(feature = "actix-web-validator")]
+#[cfg(feature = "actix-validator")]
 impl_param_extractor!(ValidatedQsQuery<T> => Query);
 
 macro_rules! impl_path_tuple ({ $($ty:ident),+ } => {
+    #[cfg(all(feature = "actix-validator", feature = "nightly"))]
+    impl<$($ty,)+> Apiv2Schema for ValidatedPath<($($ty,)+)> {}
+
+    #[cfg(all(not(feature = "nightly"), feature = "actix-validator"))]
+    impl<$($ty: Apiv2Schema,)+> Apiv2Schema for ValidatedPath<($($ty,)+)> {}
+
+    #[cfg(feature = "actix-validator")]
+    impl<$($ty,)+> OperationModifier for ValidatedPath<($($ty,)+)>
+        where $($ty: Apiv2Schema,)+
+    {
+        fn update_parameter(op: &mut DefaultOperationRaw) {
+            $(
+                let def = $ty::raw_schema();
+                if def.properties.is_empty() {
+                    op.parameters.push(Either::Right(Parameter {
+                        // NOTE: We're setting empty name, because we don't know
+                        // the name in this context. We'll get it when we add services.
+                        name: String::new(),
+                        in_: ParameterIn::Path,
+                        required: true,
+                        data_type: def.data_type,
+                        format: def.format,
+                        enum_: def.enum_,
+                        description: def.description,
+                        ..Default::default()
+                    }));
+                }
+                for (k, v) in def.properties {
+                    op.parameters.push(Either::Right(Parameter {
+                        in_: ParameterIn::Path,
+                        required: def.required.contains(&k),
+                        data_type: v.data_type,
+                        format: v.format,
+                        enum_: v.enum_,
+                        description: v.description,
+                        collection_format: None, // this defaults to csv
+                        items: v.items.as_deref().map(map_schema_to_items),
+                        name: k,
+                        ..Default::default()
+                    }));
+                }
+            )+
+        }
+    }
+
     #[cfg(feature = "nightly")]
     impl<$($ty,)+> Apiv2Schema for Path<($($ty,)+)> {}
 
