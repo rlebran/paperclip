@@ -539,7 +539,7 @@ fn test_params() {
                                         .route(web::get().to(get_known_badge_4)),
                                 )
                                 .service(
-                                    web::resource("/v/{id}/{id2}/{id3}/{id4}")
+                                    web::resource("/v/{id}/{id2}/{id3}/{id4}/{id5}")
                                         .route(web::get().to(get_known_badge_5)),
                                 )
                                 .service(
@@ -958,6 +958,20 @@ fn test_params() {
                                 }
                             }
                         },
+                        "/api/v2/{resource}/v/{id}/{id2}/{id3}/{id4}/{id5}": {
+                            "get": {
+                                "parameters": [
+                                    {
+                                        "in": "path",
+                                        "name": "id5",
+                                        "required": true,
+                                        "type": "string"
+                                    },
+                                ],
+                                "responses": {
+                                }
+                            }
+                        },
                         "/api/v2/{resource}/v/{name}": {
                             "get": {
                                 "parameters": [
@@ -1007,6 +1021,62 @@ fn test_params() {
                                         "name": "name",
                                         "required": true,
                                         "type": "string"
+                                    },
+                                    {
+                                        "in": "body",
+                                        "name": "body",
+                                        "required": true,
+                                        "schema": {
+                                            "$ref": "#/definitions/BadgeBody"
+                                        }
+                                    }
+                                ],
+                                "responses": {
+                                }
+                            }
+                        },
+                        "/api/v2/{resource}/v_": {
+                            "patch": {
+                                "parameters": [
+                                    {
+                                        "in": "path",
+                                        "name": "name",
+                                        "required": true,
+                                        "type": "string"
+                                    },
+                                    {
+                                        "in": "path",
+                                        "name": "resource",
+                                        "required": true,
+                                        "type": "string"
+                                    },
+                                    {
+                                        "in": "query",
+                                        "items": {
+                                            "type": "string"
+                                        },
+                                        "name": "colors",
+                                        "required": true,
+                                        "type": "array"
+                                    },
+                                    {
+                                        "format": "int32",
+                                        "in": "query",
+                                        "name": "res",
+                                        "type": "integer"
+                                    }
+                                ],
+                                "responses": {
+                                }
+                            },
+                            "post": {
+                                "parameters": [
+                                    {
+                                        "format": "int32",
+                                        "in": "path",
+                                        "name": "resource",
+                                        "required": true,
+                                        "type": "integer"
                                     },
                                     {
                                         "in": "body",
