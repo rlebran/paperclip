@@ -1,4 +1,4 @@
-//! Convenience macros for the [actix-web](https://github.com/wafflespeanut/paperclip/tree/master/plugins/actix-web)
+//! Convenience macros for the [actix-web](https://github.com/paperclip-rs/paperclip/tree/master/plugins/actix-web)
 //! OpenAPI plugin (exposed by paperclip with `actix` feature).
 
 use heck::*;
@@ -659,6 +659,29 @@ pub fn emit_v2_errors_overlay(attrs: TokenStream, input: TokenStream) -> TokenSt
     gen.into()
 }
 
+fn extract_rename(attrs: &[Attribute]) -> Option<String> {
+    let attrs = extract_openapi_attrs(attrs);
+    for attr in attrs.flat_map(|attr| attr.into_iter()) {
+        if let NestedMeta::Meta(Meta::NameValue(nv)) = attr {
+            if nv.path.is_ident("rename") {
+                if let Lit::Str(s) = nv.lit {
+                    return Some(s.value());
+                } else {
+                    emit_error!(
+                        nv.lit.span().unwrap(),
+                        format!(
+                            "`#[{}(rename = \"...\")]` expects a string argument",
+                            SCHEMA_MACRO_ATTR
+                        ),
+                    );
+                }
+            }
+        }
+    }
+
+    None
+}
+
 /// Actual parser and emitter for `api_v2_schema` macro.
 pub fn emit_v2_definition(input: TokenStream) -> TokenStream {
     let item_ast = match crate::expect_struct_or_enum(input) {
@@ -674,6 +697,7 @@ pub fn emit_v2_definition(input: TokenStream) -> TokenStream {
     let docs = docs.trim();
 
     let props = SerdeProps::from_item_attrs(&item_ast.attrs);
+
     let name = &item_ast.ident;
 
     // Add `Apiv2Schema` bound for impl if the type is generic.
@@ -718,28 +742,83 @@ pub fn emit_v2_definition(input: TokenStream) -> TokenStream {
         ),
     };
 
-    let schema_name = name.to_string();
+    let schema_name = extract_rename(&item_ast.attrs).unwrap_or_else(|| name.to_string());
     let props_gen_empty = props_gen.is_empty();
-    let gen = quote! {
-        impl #impl_generics paperclip::v2::schema::Apiv2Schema for #name #ty_generics #where_clause {
-            const NAME: Option<&'static str> = Some(#schema_name);
 
+    #[cfg(not(feature = "path-in-definition"))]
+    let default_schema_raw_def = quote! {
+        let mut schema = DefaultSchemaRaw {
+            name: Some(#schema_name.into()),
+            ..Default::default()
+        };
+    };
+
+    #[cfg(feature = "path-in-definition")]
+    let default_schema_raw_def = quote! {
+        let mut schema = DefaultSchemaRaw {
+            name: Some(Self::__paperclip_schema_name()), // Add name for later use.
+            .. Default::default()
+        };
+    };
+
+    #[cfg(not(feature = "path-in-definition"))]
+    let paperclip_schema_name_def = quote!();
+
+    #[cfg(feature = "path-in-definition")]
+    let paperclip_schema_name_def = quote! {
+        fn __paperclip_schema_name() -> String {
+            // The module path itself, e.g cratename::module
+            let full_module_path = std::module_path!().to_string();
+            // We're not interested in the crate name, nor do we want :: as a seperator
+            let trimmed_module_path = full_module_path.split("::")
+                .enumerate()
+                .filter(|(index, _)| *index != 0) // Skip the first element, i.e the crate name
+                .map(|(_, component)| component)
+                .collect::<Vec<_>>()
+                .join("_");
+            format!("{}_{}", trimmed_module_path, #schema_name)
+        }
+    };
+
+    #[cfg(not(feature = "path-in-definition"))]
+    let const_name_def = quote! {
+        const NAME: Option<&'static str> = Some(#schema_name);
+    };
+
+    #[cfg(feature = "path-in-definition")]
+    let const_name_def = quote!();
+
+    #[cfg(not(feature = "path-in-definition"))]
+    let props_gen_empty_name_def = quote! {
+        schema.name = Some(#schema_name.into());
+    };
+
+    #[cfg(feature = "path-in-definition")]
+    let props_gen_empty_name_def = quote! {
+        schema.name = Some(Self::__paperclip_schema_name());
+    };
+
+    let gen = quote! {
+        impl #impl_generics #name #ty_generics #where_clause {
+            #paperclip_schema_name_def
+        }
+
+        impl #impl_generics paperclip::v2::schema::Apiv2Schema for #name #ty_generics #where_clause {
+            #const_name_def
             const DESCRIPTION: &'static str = #docs;
 
             fn raw_schema() -> paperclip::v2::models::DefaultSchemaRaw {
                 use paperclip::v2::models::{DataType, DataTypeFormat, DefaultSchemaRaw};
                 use paperclip::v2::schema::TypedData;
 
-                let mut schema = DefaultSchemaRaw {
-                    name: Some(#schema_name.into()), // Add name for later use.
-                    .. Default::default()
-                };
+                #default_schema_raw_def
+
                 #props_gen
                 // props_gen may override the schema for unnamed structs with 1 element
                 // as it replaces the struct type with inner type.
                 // make sure we set the name properly if props_gen is not empty
                 if !#props_gen_empty {
-                    schema.name = Some(#schema_name.into());
+                    #props_gen_empty_name_def
                 }
                 schema
             }
@@ -1024,7 +1103,7 @@ fn handle_unnamed_field_struct(
             }
         }
     } else {
-        for (inner_field_id, field) in (&fields.unnamed).into_iter().enumerate() {
+        for (inner_field_id, field) in fields.unnamed.iter().enumerate() {
             if SerdeSkip::exists(&field.attrs) {
                 continue;
             }
@@ -1068,7 +1147,7 @@ fn extract_openapi_attrs(
     field_attrs: &'_ [Attribute],
 ) -> impl Iterator<Item = Punctuated<syn::NestedMeta, syn::token::Comma>> + '_ {
     field_attrs.iter().filter_map(|a| match a.parse_meta() {
-        Ok(Meta::List(list)) if list.path.is_ident("openapi") => Some(list.nested),
+        Ok(Meta::List(list)) if list.path.is_ident(SCHEMA_MACRO_ATTR) => Some(list.nested),
         _ => None,
     })
 }
@@ -1309,12 +1388,12 @@ impl SerdeRename {
         match self {
             SerdeRename::Lower => name.to_lowercase(),
             SerdeRename::Upper => name.to_uppercase(),
-            SerdeRename::Pascal => name.to_camel_case(),
-            SerdeRename::Camel => name.to_mixed_case(),
+            SerdeRename::Pascal => name.to_pascal_case(),
+            SerdeRename::Camel => name.to_lower_camel_case(),
             SerdeRename::Snake => name.to_snake_case(),
-            SerdeRename::ScreamingSnake => name.to_snake_case().to_uppercase(),
+            SerdeRename::ScreamingSnake => name.to_shouty_snake_case(),
             SerdeRename::Kebab => name.to_kebab_case(),
-            SerdeRename::ScreamingKebab => name.to_kebab_case().to_uppercase(),
+            SerdeRename::ScreamingKebab => name.to_shouty_kebab_case(),
         }
     }
 }

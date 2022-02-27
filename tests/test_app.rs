@@ -411,7 +411,7 @@ fn test_params() {
         p.data.is_empty()
     }
 
-    // issue: https://github.com/wafflespeanut/paperclip/issues/216
+    // issue: https://github.com/paperclip-rs/paperclip/issues/216
     #[api_v2_operation]
     async fn check_data_ref_async(
         app: web::Data<AppState>,
@@ -1708,11 +1708,21 @@ fn test_tags() {
                     external_docs: None,
                 },
             ];
+            let mut extensions = BTreeMap::new();
+            extensions.insert("x-my-attr".to_string(), serde_json::Value::Bool(true));
             spec.info = Info {
                 version: "0.1".into(),
                 title: "Image server".into(),
+                extensions,
                 ..Default::default()
             };
+
+            let mut root_extensions = BTreeMap::new();
+            root_extensions.insert(
+                "x-root-level-extension".to_string(),
+                serde_json::Value::Bool(false),
+            );
+            spec.extensions = root_extensions;
 
             App::new()
                 .wrap_api_with_spec(spec)
@@ -1752,8 +1762,10 @@ fn test_tags() {
                     },
                     "info":{
                         "title":"Image server",
-                        "version":"0.1"
+                        "version":"0.1",
+                        "x-my-attr":true
                     },
+                    "x-root-level-extension": false,
                     "paths":{
                         "/images/pets":{
                             "get":{
@@ -3251,4 +3263,318 @@ fn test_openapi3() {
     let spec = std::fs::File::open("tests/pet-v2.yaml").unwrap();
     let spec: DefaultApiRaw = serde_yaml::from_reader(spec).unwrap();
     let _spec_v3: openapiv3::OpenAPI = spec.into();
+}
+
+#[test]
+fn test_rename() {
+    #[derive(Deserialize, Serialize, Apiv2Schema)]
+    #[serde(rename_all = "camelCase")]
+    #[openapi(rename = "PetRenamed")]
+    /// Pets are awesome!
+    struct Pet {
+        /// Pick a good one.
+        name: String,
+    }
+
+    #[get("/pets")]
+    #[api_v2_operation]
+    fn echo_pets() -> impl Future<Output = Result<web::Json<Vec<Pet>>, Error>> {
+        fut_ok(web::Json(vec![]))
+    }
+
+    run_and_check_app(
+        || {
+            App::new()
+                .wrap_api()
+                .service(echo_pets)
+                .with_raw_json_spec(|app, spec| {
+                    app.route(
+                        "/api/spec",
+                        web::get().to(move || actix_web::HttpResponse::Ok().json(&spec)),
+                    )
+                })
+                .build()
+        },
+        |addr| {
+            let resp = CLIENT
+                .get(&format!("http://{}/api/spec", addr))
+                .send()
+                .expect("request failed?");
+
+            check_json(
+                resp,
+                json!({
+                    "definitions": {
+                        "PetRenamed": {
+                            "description": "Pets are awesome!",
+                            "properties": {
+                                "name": {
+                                    "description": "Pick a good one.",
+                                    "type": "string"
+                                },
+                            },
+                            "required":[
+                                "name"
+                            ],
+                            "type":"object"
+                        }
+                    },
+                    "info": {
+                        "title":"",
+                        "version":""
+                    },
+                    "paths": {
+                        "/pets": {
+                            "get": {
+                                "responses": {
+                                "200": {
+                                    "description": "OK",
+                                    "schema": {
+                                        "items": {
+                                            "$ref": "#/definitions/PetRenamed"
+                                        },
+                                        "type": "array"
+                                    }
+                                }
+                                },
+                            }
+                        }
+                    },
+                    "swagger": "2.0"
+                }),
+            );
+        },
+    );
+}
+
+mod module_path_in_definition_name {
+    pub mod foo {
+        pub mod bar {
+            #[derive(serde::Serialize, paperclip::actix::Apiv2Schema)]
+            pub struct Baz {
+                pub a: i32,
+                pub b: i32,
+            }
+        }
+
+        pub mod other_bar {
+            #[derive(serde::Serialize, paperclip::actix::Apiv2Schema)]
+            pub struct Baz {
+                pub a: String,
+                pub b: bool,
+            }
+        }
+    }
+}
+
+#[test]
+#[cfg(feature = "path-in-definition")]
+fn test_module_path_in_definition_name() {
+    use paperclip::actix::{api_v2_operation, web, OpenApiExt};
+
+    #[api_v2_operation]
+    fn a() -> web::Json<module_path_in_definition_name::foo::bar::Baz> {
+        web::Json(module_path_in_definition_name::foo::bar::Baz { a: 10, b: 10 })
+    }
+
+    #[api_v2_operation]
+    fn b() -> web::Json<module_path_in_definition_name::foo::other_bar::Baz> {
+        web::Json(module_path_in_definition_name::foo::other_bar::Baz {
+            a: String::default(),
+            b: true,
+        })
+    }
+
+    run_and_check_app(
+        || {
+            App::new()
+                .wrap_api()
+                .with_json_spec_at("/spec")
+                .route("/a", web::get().to(a))
+                .route("/b", web::get().to(b))
+                .build()
+        },
+        |addr| {
+            let resp = CLIENT
+                .get(&format!("http://{}/spec", addr))
+                .send()
+                .expect("request failed?");
+
+            check_json(
+                resp,
+                json!({
+                    "definitions": {
+                      "module_path_in_definition_name_foo_bar_Baz": {
+                        "properties": {
+                          "a": {
+                            "format": "int32",
+                            "type": "integer"
+                          },
+                          "b": {
+                            "format": "int32",
+                            "type": "integer"
+                          }
+                        },
+                        "required": [
+                          "a",
+                          "b"
+                        ],
+                        "type": "object"
+                      },
+                      "module_path_in_definition_name_foo_other_bar_Baz": {
+                        "properties": {
+                          "a": {
+                            "type": "string"
+                          },
+                          "b": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": [
+                          "a",
+                          "b"
+                        ],
+                        "type": "object"
+                      }
+                    },
+                    "info": {
+                      "title": "",
+                      "version": ""
+                    },
+                    "paths": {
+                      "/a": {
+                        "get": {
+                          "responses": {
+                            "200": {
+                              "description": "OK",
+                              "schema": {
+                                "$ref": "#/definitions/module_path_in_definition_name_foo_bar_Baz"
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "/b": {
+                        "get": {
+                          "responses": {
+                            "200": {
+                              "description": "OK",
+                              "schema": {
+                                "$ref": "#/definitions/module_path_in_definition_name_foo_other_bar_Baz"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "swagger": "2.0"
+                }),
+            )
+        },
+    )
+}
+
+#[test]
+fn test_ipvx() {
+    #[derive(Deserialize, Serialize, Apiv2Schema)]
+    #[serde(rename_all = "camelCase")]
+    /// Pets are awesome!
+    struct Pet {
+        /// Pick a good one.
+        name: String,
+        /// An Ip address.
+        ip: std::net::IpAddr,
+        /// An IpV4 address.
+        ip_v4: std::net::Ipv4Addr,
+        /// An IpV6 address.
+        ip_v6: std::net::Ipv6Addr,
+    }
+
+    #[get("/pets")]
+    #[api_v2_operation]
+    fn echo_pets() -> impl Future<Output = Result<web::Json<Vec<Pet>>, Error>> {
+        fut_ok(web::Json(vec![]))
+    }
+
+    run_and_check_app(
+        || {
+            App::new()
+                .wrap_api()
+                .service(echo_pets)
+                .with_raw_json_spec(|app, spec| {
+                    app.route(
+                        "/api/spec",
+                        web::get().to(move || actix_web::HttpResponse::Ok().json(&spec)),
+                    )
+                })
+                .build()
+        },
+        |addr| {
+            let resp = CLIENT
+                .get(&format!("http://{}/api/spec", addr))
+                .send()
+                .expect("request failed?");
+
+            check_json(
+                resp,
+                json!({
+                    "definitions": {
+                        "Pet": {
+                            "description": "Pets are awesome!",
+                            "properties": {
+                                "name": {
+                                    "description": "Pick a good one.",
+                                    "type": "string"
+                                },
+                                "ip": {
+                                    "description": "An Ip address.",
+                                    "format": "ip",
+                                    "type": "string"
+                                },
+                                "ipV4": {
+                                    "description": "An IpV4 address.",
+                                    "format": "ipv4",
+                                    "type": "string"
+                                },
+                                "ipV6": {
+                                    "description": "An IpV6 address.",
+                                    "format": "ipv6",
+                                    "type": "string"
+                                }
+                            },
+                            "required": [
+                                "ip",
+                                "ipV4",
+                                "ipV6",
+                                "name"
+                            ],
+                            "type" : "object"
+                        }
+                    },
+                    "info": {
+                        "title":"",
+                        "version":""
+                    },
+                    "paths": {
+                        "/pets": {
+                            "get": {
+                                "responses": {
+                                "200": {
+                                    "description": "OK",
+                                    "schema": {
+                                        "items": {
+                                            "$ref": "#/definitions/Pet"
+                                        },
+                                        "type": "array"
+                                    }
+                                }
+                                },
+                            }
+                        }
+                    },
+                    "swagger": "2.0"
+                }),
+            );
+        },
+    );
 }
