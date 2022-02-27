@@ -1,3 +1,8 @@
+#[cfg(feature = "actix3-validator")]
+extern crate actix_web_validator2 as actix_web_validator;
+#[cfg(feature = "actix-validator")]
+extern crate actix_web_validator3 as actix_web_validator;
+
 #[cfg(feature = "actix-multipart")]
 use super::schema::TypedData;
 use super::{
@@ -7,18 +12,23 @@ use super::{
     },
     schema::{Apiv2Errors, Apiv2Operation, Apiv2Schema},
 };
+#[cfg(not(feature = "actix4"))]
 use crate::util::{ready, Ready};
-#[cfg(feature = "actix3")]
+#[cfg(any(feature = "actix3", feature = "actix4"))]
 use actix_web::web::ReqData;
+#[cfg(not(feature = "actix4"))]
+use actix_web::Error;
+#[cfg(feature = "actix4")]
+use actix_web::{body::BoxBody, ResponseError};
 use actix_web::{
     http::StatusCode,
     web::{Bytes, Data, Form, Json, Path, Payload, Query},
-    Error, HttpRequest, HttpResponse, Responder,
+    HttpRequest, HttpResponse, Responder,
 };
 
 use pin_project::pin_project;
 
-#[cfg(feature = "actix-validator")]
+#[cfg(any(feature = "actix-validator", feature = "actix3-validator"))]
 use actix_web_validator::{
     Json as ValidatedJson, Path as ValidatedPath, QsQuery as ValidatedQsQuery,
     Query as ValidatedQuery,
@@ -159,10 +169,10 @@ where
 impl<T> Apiv2Schema for Data<T> {}
 #[cfg(not(feature = "nightly"))]
 impl<T> OperationModifier for Data<T> {}
-#[cfg(feature = "actix3")]
+#[cfg(any(feature = "actix3", feature = "actix4"))]
 impl<T: std::clone::Clone> Apiv2Schema for ReqData<T> {}
 #[cfg(not(feature = "nightly"))]
-#[cfg(feature = "actix3")]
+#[cfg(any(feature = "actix3", feature = "actix4"))]
 impl<T: std::clone::Clone> OperationModifier for ReqData<T> {}
 
 macro_rules! impl_empty({ $($ty:ty),+ } => {
@@ -173,6 +183,40 @@ macro_rules! impl_empty({ $($ty:ty),+ } => {
     )+
 });
 
+#[cfg(feature = "actix4")]
+// Workaround for possibility to directly return HttpResponse from handler
+// after actix removed impl Future from HttpResponse.
+// https://github.com/actix/actix-web/pull/2601
+pub struct HttpResponseWrapper(pub HttpResponse);
+
+#[cfg(feature = "actix4")]
+impl Responder for HttpResponseWrapper {
+    type Body = <HttpResponse as Responder>::Body;
+
+    fn respond_to(self, req: &HttpRequest) -> HttpResponse<Self::Body> {
+        self.0.respond_to(req)
+    }
+}
+
+#[cfg(feature = "actix4")]
+impl<F> Apiv2Operation for F
+where
+    F: Future<Output = HttpResponseWrapper>,
+{
+    fn operation() -> DefaultOperationRaw {
+        Default::default()
+    }
+
+    fn security_definitions() -> BTreeMap<String, SecurityScheme> {
+        Default::default()
+    }
+
+    fn definitions() -> BTreeMap<String, DefaultSchemaRaw> {
+        Default::default()
+    }
+}
+
+#[cfg(not(feature = "actix4"))]
 impl Apiv2Operation for HttpResponse {
     fn operation() -> DefaultOperationRaw {
         Default::default()
@@ -577,6 +621,23 @@ impl<T: Responder> Apiv2Schema for ResponderWrapper<T> {}
 #[cfg(not(feature = "nightly"))]
 impl<T: Responder> OperationModifier for ResponderWrapper<T> {}
 
+#[cfg(feature = "actix4")]
+impl Apiv2Schema for actix_web::dev::Response<actix_web::body::BoxBody> {}
+
+#[cfg(feature = "actix4")]
+impl OperationModifier for actix_web::dev::Response<actix_web::body::BoxBody> {}
+
+#[cfg(feature = "actix4")]
+impl<T: Responder> Responder for ResponderWrapper<T> {
+    type Body = T::Body;
+
+    #[inline]
+    fn respond_to(self, req: &HttpRequest) -> HttpResponse<Self::Body> {
+        self.0.respond_to(req)
+    }
+}
+
+#[cfg(not(feature = "actix4"))]
 impl<T: Responder> Responder for ResponderWrapper<T> {
     type Error = T::Error;
     type Future = T::Future;
@@ -593,6 +654,17 @@ impl<T: Responder> Responder for ResponderWrapper<T> {
 #[pin_project]
 pub struct ResponseWrapper<T, H>(#[pin] pub T, pub H);
 
+#[cfg(feature = "actix4")]
+impl<T: Responder, H> Responder for ResponseWrapper<T, H> {
+    type Body = T::Body;
+
+    #[inline]
+    fn respond_to(self, req: &HttpRequest) -> HttpResponse<Self::Body> {
+        self.0.respond_to(req)
+    }
+}
+
+#[cfg(not(feature = "actix4"))]
 impl<T: Responder, H> Responder for ResponseWrapper<T, H> {
     type Error = <T as Responder>::Error;
     type Future = <T as Responder>::Future;
@@ -706,6 +778,27 @@ macro_rules! json_with_status {
             }
         }
 
+        #[cfg(feature = "actix4")]
+        impl<T> Responder for $name<T>
+        where
+            T: Serialize + Apiv2Schema,
+        {
+            type Body = BoxBody;
+
+            fn respond_to(self, _: &HttpRequest) -> HttpResponse<BoxBody> {
+                let status: StatusCode = $status;
+                let body = match serde_json::to_string(&self.0) {
+                    Ok(body) => body,
+                    Err(e) => return e.error_response(),
+                };
+
+                HttpResponse::build(status)
+                    .content_type("application/json")
+                    .body(body)
+            }
+        }
+
+        #[cfg(not(feature = "actix4"))]
         impl<T> Responder for $name<T>
         where
             T: Serialize + Apiv2Schema,
@@ -772,6 +865,18 @@ impl fmt::Display for NoContent {
     }
 }
 
+#[cfg(feature = "actix4")]
+impl Responder for NoContent {
+    type Body = BoxBody;
+
+    fn respond_to(self, _: &HttpRequest) -> HttpResponse<BoxBody> {
+        HttpResponse::build(StatusCode::NO_CONTENT)
+            .content_type("application/json")
+            .finish()
+    }
+}
+
+#[cfg(not(feature = "actix4"))]
 impl Responder for NoContent {
     type Error = Error;
     type Future = Ready<Result<HttpResponse, Error>>;
