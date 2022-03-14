@@ -1,6 +1,6 @@
 #[cfg(feature = "actix3-validator")]
 extern crate actix_web_validator2 as actix_web_validator;
-#[cfg(feature = "actix-validator")]
+#[cfg(feature = "actix4-validator")]
 extern crate actix_web_validator3 as actix_web_validator;
 
 #[cfg(feature = "actix-multipart")]
@@ -28,7 +28,7 @@ use actix_web::{
 
 use pin_project::pin_project;
 
-#[cfg(any(feature = "actix-validator", feature = "actix3-validator"))]
+#[cfg(any(feature = "actix4-validator", feature = "actix3-validator"))]
 use actix_web_validator::{
     Json as ValidatedJson, Path as ValidatedPath, QsQuery as ValidatedQsQuery,
     Query as ValidatedQuery,
@@ -184,9 +184,22 @@ macro_rules! impl_empty({ $($ty:ty),+ } => {
 });
 
 #[cfg(feature = "actix4")]
-// Workaround for possibility to directly return HttpResponse from handler
-// after actix removed impl Future from HttpResponse.
-// https://github.com/actix/actix-web/pull/2601
+/// Workaround for possibility to directly return HttpResponse from closure handler.
+///
+/// This is needed after actix removed `impl Future` from `HttpResponse`:
+/// <https://github.com/actix/actix-web/pull/2601>
+///
+/// Example:
+//////
+/// ```ignore
+/// .route(web::get().to(||
+///     async move {
+///         paperclip::actix::HttpResponseWrapper(
+///             HttpResponse::Ok().body("Hi there!")
+///         )
+///     }
+/// ))
+/// ```
 pub struct HttpResponseWrapper(pub HttpResponse);
 
 #[cfg(feature = "actix4")]
@@ -330,7 +343,10 @@ where
     }
 }
 
-#[cfg(all(feature = "actix-validator", feature = "nightly"))]
+#[cfg(all(
+    any(feature = "actix4-validator", feature = "actix3-validator"),
+    feature = "nightly"
+))]
 impl<T> Apiv2Schema for ValidatedJson<T> {
     default const NAME: Option<&'static str> = None;
 
@@ -339,7 +355,7 @@ impl<T> Apiv2Schema for ValidatedJson<T> {
     }
 }
 
-#[cfg(feature = "actix-validator")]
+#[cfg(any(feature = "actix4-validator", feature = "actix3-validator"))]
 impl<T: Apiv2Schema> Apiv2Schema for ValidatedJson<T> {
     const NAME: Option<&'static str> = T::NAME;
 
@@ -348,7 +364,7 @@ impl<T: Apiv2Schema> Apiv2Schema for ValidatedJson<T> {
     }
 }
 
-#[cfg(feature = "actix-validator")]
+#[cfg(any(feature = "actix4-validator", feature = "actix3-validator"))]
 impl<T> OperationModifier for ValidatedJson<T>
 where
     T: Apiv2Schema,
@@ -491,21 +507,21 @@ impl_param_extractor!(Query<T> => Query);
 impl_param_extractor!(Form<T> => FormData);
 #[cfg(feature = "serde_qs")]
 impl_param_extractor!(QsQuery<T> => Query);
-#[cfg(feature = "actix-validator")]
+#[cfg(any(feature = "actix4-validator", feature = "actix3-validator"))]
 impl_param_extractor!(ValidatedPath<T> => Path);
-#[cfg(feature = "actix-validator")]
+#[cfg(any(feature = "actix4-validator", feature = "actix3-validator"))]
 impl_param_extractor!(ValidatedQuery<T> => Query);
-#[cfg(feature = "actix-validator")]
+#[cfg(any(feature = "actix4-validator", feature = "actix3-validator"))]
 impl_param_extractor!(ValidatedQsQuery<T> => Query);
 
 macro_rules! impl_path_tuple ({ $($ty:ident),+ } => {
-    #[cfg(all(feature = "actix-validator", feature = "nightly"))]
+    #[cfg(all(any(feature = "actix4-validator", feature = "actix3-validator"), feature = "nightly"))]
     impl<$($ty,)+> Apiv2Schema for ValidatedPath<($($ty,)+)> {}
 
-    #[cfg(all(not(feature = "nightly"), feature = "actix-validator"))]
+    #[cfg(all(not(feature = "nightly"), any(feature = "actix4-validator", feature = "actix3-validator")))]
     impl<$($ty: Apiv2Schema,)+> Apiv2Schema for ValidatedPath<($($ty,)+)> {}
 
-    #[cfg(feature = "actix-validator")]
+    #[cfg(any(feature = "actix4-validator", feature = "actix3-validator"))]
     impl<$($ty,)+> OperationModifier for ValidatedPath<($($ty,)+)>
         where $($ty: Apiv2Schema,)+
     {

@@ -1,8 +1,8 @@
 # Host OpenAPI spec through actix-web
 
-With `actix` feature enabled, paperclip exports a plugin for [actix-web](https://github.com/actix/actix-web) framework to host OpenAPI v2 spec for your APIs *automatically*. While it's not feature complete, you can rely on it to not break your actix-web flow.
+With `actix4` feature enabled, paperclip exports a plugin for [actix-web](https://github.com/actix/actix-web) framework to host OpenAPI v2 spec for your APIs *automatically*. While it's not feature complete, you can rely on it to not break your actix-web flow.
 
-Let's start with a simple actix-web application. It has `actix-web` and `serde` for JSON'ifying your APIs. Let's also add `paperclip` with `actix` feature.
+Let's start with a simple actix-web application. It has `actix-web` and `serde` for JSON'ifying your APIs. Let's also add `paperclip` with `actix4` feature.
 
 ```toml
 # [package] ignored for brevity
@@ -11,16 +11,45 @@ Let's start with a simple actix-web application. It has `actix-web` and `serde` 
 # actix-web 2.0 is supported through "actix2" and "actix2-nightly" features
 # actix-web 3.0 is supported through "actix3" and "actix3-nightly" features
 actix-web = "4.0"
-# The "actix-nightly" feature can be specified if you're using nightly compiler. Even though
+# The "actix4-nightly" feature can be specified if you're using nightly compiler. Even though
 # this plugin works smoothly with the nightly compiler, it also works in stable
-# channel (replace "actix-nightly" feature with "actix" in that case). There maybe compilation errors,
+# channel (replace "actix4-nightly" feature with "actix4" in that case). There maybe compilation errors,
 # but those can be fixed.
 # Add the "v3" option if you want to expose an OpenAPI v3 document
-paperclip = { version = "0.6", features = ["actix"] }
+paperclip = { version = "0.6", features = ["actix4"] }
 serde = { version = "1.0", features = ["derive"] }
 ```
 
 Our `main.rs` looks like this:
+
+```rust
+use actix_web::{App, HttpServer, Error, web::{self, Json}};
+use serde::{Serialize, Deserialize};
+
+// Mark containers (body, query, parameter, etc.) like so...
+#[derive(Serialize, Deserialize)]
+struct Pet {
+    name: String,
+    id: Option<i64>,
+}
+
+async fn echo_pet(body: Json<Pet>) -> Result<Json<Pet>, Error> {
+    Ok(body)
+}
+
+#[actix_web::main]
+async fn main() -> std::io::Result<()> {
+    HttpServer::new(|| App::new()
+        .service(
+            web::resource("/pets")
+                .route(web::post().to(echo_pet))
+        )
+    ).bind("127.0.0.1:8080")?
+    .run().await
+}
+```
+
+Now, let's modify it to use the plugin!
 
 ```rust
 use actix_web::{App, HttpServer, Error};
@@ -138,15 +167,15 @@ curl http://localhost:8080/api/spec/v2
               "$ref": "#/definitions/Pet"
             }
           }
-        }
+        },
         "parameters": [{
-            "in": "body",
-            "name": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/Pet"
-            }
-        }],
+          "in": "body",
+          "name": "body",
+          "required": true,
+          "schema": {
+            "$ref": "#/definitions/Pet"
+          }
+        }]
       }
     }
   },

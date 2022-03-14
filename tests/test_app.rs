@@ -5,12 +5,12 @@ extern crate serde_json;
 
 #[cfg(feature = "actix3-validator")]
 extern crate actix_web_validator2 as actix_web_validator;
-#[cfg(feature = "actix-validator")]
+#[cfg(feature = "actix4-validator")]
 extern crate actix_web_validator3 as actix_web_validator;
 
 #[cfg(feature = "actix3-validator")]
 extern crate validator12 as validator;
-#[cfg(feature = "actix-validator")]
+#[cfg(feature = "actix4-validator")]
 extern crate validator14 as validator;
 
 #[cfg(not(feature = "actix4"))]
@@ -39,10 +39,7 @@ use actix_web::{
     dev::{Payload, ServiceRequest, ServiceResponse},
     App, Error, FromRequest, HttpRequest, HttpServer, Responder,
 };
-use actix_web_validator::{
-    Json as ValidatedJson, Path as ValidatedPath, Query as ValidatedQuery
-};
-use validator::Validate;
+use actix_web_validator::{Json as ValidatedJson, Path as ValidatedPath, Query as ValidatedQuery};
 use futures::future::{ok as fut_ok, ready, Future, Ready};
 use once_cell::sync::Lazy;
 use paperclip::{
@@ -53,6 +50,7 @@ use paperclip::{
     v2::models::{DefaultApiRaw, Info, Tag},
 };
 use parking_lot::Mutex;
+use validator::Validate;
 
 use std::{
     collections::{BTreeMap, HashMap, HashSet},
@@ -419,7 +417,7 @@ fn test_params() {
     );
 
     /// KnownBadge Id4 Doc
-    #[derive(Serialize, Deserialize, Validate, Apiv2Schema)]
+    #[derive(Serialize, Deserialize, Apiv2Schema, Validate)]
     struct KnownBadgeId4 {
         id: String,
     }
@@ -464,6 +462,13 @@ fn test_params() {
         app: web::Data<AppState>,
         _req_data: Option<web::ReqData<bool>>, // this should compile and change nothing
     ) -> web::Json<bool> {
+        web::Json(is_data_empty(app.get_ref()).await)
+    }
+
+    // Use dumb check_data_ref_async function for actix2 instead of real one
+    #[cfg(feature = "actix2")]
+    #[api_v2_operation]
+    async fn check_data_ref_async(app: web::Data<AppState>) -> web::Json<bool> {
         web::Json(is_data_empty(app.get_ref()).await)
     }
 
