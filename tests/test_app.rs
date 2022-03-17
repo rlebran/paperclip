@@ -1208,9 +1208,6 @@ fn test_map_in_out() {
         || {
             let app = App::new().wrap_api().with_json_spec_at("/api/spec");
 
-            #[cfg(feature = "swagger-ui")]
-            let app = app.with_swagger_ui_at("/swagger");
-
             app.service(web::resource("/images").route(web::get().to(some_images)))
                 .service(web::resource("/catalogue").route(web::post().to(catalogue)))
                 .build()
@@ -1336,16 +1333,6 @@ fn test_map_in_out() {
                      "swagger":"2.0"
                 }),
             );
-
-            #[cfg(feature = "swagger-ui")]
-            {
-                let resp = CLIENT
-                    .get(&format!("http://{}/swagger", addr))
-                    .send()
-                    .expect("request failed?");
-
-                assert_eq!(resp.status().as_u16(), 200);
-            }
         },
     );
 }
