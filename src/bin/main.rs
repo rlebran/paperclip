@@ -17,7 +17,8 @@ use std::{
 fn parse_version(s: &str) -> Result<OApiVersion, Error> {
     match s {
         "v2" => Ok(OApiVersion::V2),
-        "v3" => Ok(OApiVersion::V3),
+        "v3" => Ok(OApiVersion::V3), //@todo log warning and return v3.1?
+        "v3.1" => Ok(OApiVersion::V3_1),
         _ => Err(PaperClipError::UnsupportedOpenAPIVersion.into()),
     }
 }
@@ -31,6 +32,7 @@ fn parse_spec(s: &str) -> Result<ResolvableApi<DefaultSchema>, Error> {
 enum OApiVersion {
     V2,
     V3,
+    V3_1,
 }
 
 #[derive(Debug, StructOpt)]

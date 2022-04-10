@@ -303,22 +303,6 @@ where
         call(self, spec)
     }
 
-    #[cfg(feature = "v3")]
-    /// Calls the given function with `App` and JSON `Value` representing your API
-    /// v2 specification **built until now** which is converted to v3.
-    ///
-    /// **NOTE:** Unlike `with_json_spec_at`, this only has the API spec built until
-    /// this function call. Any route handler added after this call won't affect the
-    /// spec. So, it's important to call this function after adding all route handlers.
-    pub fn with_raw_json_spec_v3<F>(self, mut call: F) -> Self
-    where
-        F: FnMut(Self, serde_json::Value) -> Self,
-    {
-        let v3 = paperclip_core::v3::openapiv2_to_v3(self.spec.read().clone());
-        let spec = serde_json::to_value(v3).expect("generating json spec");
-        call(self, spec)
-    }
-
     /// Exposes the previously built JSON specification with Swagger UI at the given path
     ///
     /// **NOTE:** you **MUST** call with_json_spec_at before calling this function
@@ -360,11 +344,6 @@ where
 
     /// Builds and returns the `actix_web::App`.
     pub fn build(self) -> actix_web::App<T, B> {
-        #[cfg(feature = "v3")]
-        if let Some(v3) = self.spec_v3 {
-            let mut v3 = v3.write();
-            *v3 = paperclip_core::v3::openapiv2_to_v3(self.spec.read().clone());
-        }
         self.inner.expect("missing app?")
     }
 
