@@ -1,5 +1,4 @@
-mod parameter;
-
+mod schema;
 
 /// Holds a set of reusable objects for different aspects of the OAS.
 /// All objects defined within the components object will have no effect
