@@ -28,6 +28,8 @@ pub mod actix {
     pub use paperclip_core::v2::{
         AcceptedJson, CreatedJson, NoContent, OperationModifier, ResponderWrapper, ResponseWrapper,
     };
+    pub use paperclip_core::common;
+    pub use paperclip_core::extensions;
 
     #[cfg(feature = "actix4")]
     pub use paperclip_core::v2::HttpResponseWrapper;

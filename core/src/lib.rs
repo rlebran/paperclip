@@ -11,8 +11,11 @@ extern crate actix_web4 as actix_web;
 extern crate serde;
 
 mod error;
+pub mod common;
+pub mod extensions;
 pub mod im;
 pub mod util;
+pub mod version;
 #[cfg(feature = "v2")]
 pub mod v2;
 #[cfg(feature = "v3")]

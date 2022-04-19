@@ -9,7 +9,9 @@ use super::{
     emitter::{ANY_GENERIC_PARAMETER, EXTRA_PROPS_FIELD, FILE_MARKER},
     RUST_KEYWORDS,
 };
-use crate::v2::models::{Coder, CollectionFormat, HttpMethod, ParameterIn};
+use crate::v2::models::{CollectionFormat, ParameterIn};
+use paperclip_core::extensions::Coder;
+use paperclip_core::common::HttpMethod;
 use heck::{ToPascalCase, ToSnakeCase};
 use once_cell::sync::Lazy;
 use regex::{Captures, Regex};

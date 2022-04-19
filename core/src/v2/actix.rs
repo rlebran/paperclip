@@ -7,7 +7,7 @@ extern crate actix_web_validator3 as actix_web_validator;
 use super::schema::TypedData;
 use super::{
     models::{
-        DefaultOperationRaw, DefaultSchemaRaw, Either, Items, Parameter, ParameterIn, Response,
+        DefaultOperationRaw, DefaultSchemaRaw, Items, Parameter, ParameterIn, Response,
         SecurityScheme,
     },
     schema::{Apiv2Errors, Apiv2Operation, Apiv2Schema},
@@ -44,6 +44,7 @@ use std::{
     pin::Pin,
     task::{Context, Poll},
 };
+use crate::common::Either;
 
 /// Actix-specific trait for indicating that this entity can modify an operation
 /// and/or update the global map of definitions.

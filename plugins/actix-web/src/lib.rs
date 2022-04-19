@@ -37,8 +37,9 @@ pub use paperclip_macros::{
 };
 
 use paperclip_core::v2::models::{
-    DefaultOperationRaw, DefaultPathItemRaw, DefaultSchemaRaw, HttpMethod, SecurityScheme,
+    DefaultOperationRaw, DefaultPathItemRaw, DefaultSchemaRaw, SecurityScheme,
 };
+use paperclip_core::common::HttpMethod;
 
 use std::collections::BTreeMap;
 

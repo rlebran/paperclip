@@ -1,11 +1,12 @@
 //! Models used by OpenAPI v2.
 
 pub use super::extensions::{
-    Coder, Coders, MediaRange, JSON_CODER, JSON_MIME, YAML_CODER, YAML_MIME,
+    Coders,
 };
 
 use super::schema::Schema;
 use crate::error::ValidationError;
+use crate::version::Version;
 use once_cell::sync::Lazy;
 use paperclip_macros::api_v2_schema_struct;
 use regex::{Captures, Regex};
@@ -29,13 +30,6 @@ static PATH_TEMPLATE_REGEX: Lazy<Regex> =
 // Headers that have special meaning in OpenAPI. These cannot be used in header parameter.
 // Ensure that they're all lowercase for case insensitive check.
 const SPECIAL_HEADERS: &[&str] = &["content-type", "accept", "authorization"];
-
-/// OpenAPI version.
-#[derive(Clone, Copy, Debug, Serialize, Deserialize, Eq, PartialEq)]
-pub enum Version {
-    #[serde(rename = "2.0")]
-    V2,
-}
 
 /// Supported data types.
 #[derive(Clone, Copy, Debug, Serialize, Deserialize, Eq, PartialEq)]
@@ -193,34 +187,8 @@ pub struct Api<P, R, S> {
     #[serde(
         flatten,
         skip_serializing_if = "BTreeMap::is_empty",
-        deserialize_with = "crate::v2::extensions::deserialize_extensions"
     )]
     pub extensions: BTreeMap<String, serde_json::Value>,
-}
-
-/// The format used by spec (JSON/YAML).
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum SpecFormat {
-    Json,
-    Yaml,
-}
-
-impl SpecFormat {
-    /// The en/decoder used for this format.
-    pub fn coder(self) -> Arc<Coder> {
-        match self {
-            SpecFormat::Json => JSON_CODER.clone(),
-            SpecFormat::Yaml => YAML_CODER.clone(),
-        }
-    }
-
-    /// The mime for this format.
-    pub fn mime(self) -> &'static MediaRange {
-        match self {
-            SpecFormat::Json => &*JSON_MIME,
-            SpecFormat::Yaml => &*YAML_MIME,
-        }
-    }
 }
 
 impl<P, R, S> Api<P, R, S> {
@@ -234,7 +202,9 @@ impl<P, R, S> Api<P, R, S> {
     }
 }
 
-use crate as paperclip; // hack for proc macro
+use crate as paperclip;
+use crate::common::{Either, HttpMethod, SpecFormat};
+use crate::extensions::MediaRange; // hack for proc macro
 
 /// Default schema if your schema doesn't have any custom fields.
 ///
@@ -260,7 +230,6 @@ pub struct Info {
     #[serde(
         flatten,
         skip_serializing_if = "BTreeMap::is_empty",
-        deserialize_with = "crate::v2::extensions::deserialize_extensions"
     )]
     pub extensions: BTreeMap<String, serde_json::Value>,
 }
@@ -774,70 +743,7 @@ pub struct Header {
     pub multiple_of: Option<f32>,
 }
 
-/// The HTTP method used for an operation.
-#[derive(Clone, Copy, Debug, Serialize, Deserialize, Eq, PartialEq, Ord, PartialOrd)]
-#[serde(rename_all = "lowercase")]
-pub enum HttpMethod {
-    Get,
-    Put,
-    Post,
-    Delete,
-    Options,
-    Head,
-    Patch,
-}
-
-impl HttpMethod {
-    /// Whether this method allows body in requests.
-    pub fn allows_body(self) -> bool {
-        std::matches!(self, HttpMethod::Post | HttpMethod::Put | HttpMethod::Patch)
-    }
-}
-
 /* Helpers */
-
-/// `Either` from "either" crate. We can't use that crate because
-/// we don't want the enum to be tagged during de/serialization.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(untagged)]
-pub enum Either<L, R> {
-    Left(L),
-    Right(R),
-}
-
-impl<L, R> Either<L, R> {
-    /// Get a readable reference to the right variant (if it exists).
-    pub fn right(&self) -> Option<&R> {
-        match self {
-            Either::Left(_) => None,
-            Either::Right(r) => Some(r),
-        }
-    }
-
-    /// Get a mutable reference to the right variant (if it exists).
-    pub fn right_mut(&mut self) -> Option<&mut R> {
-        match self {
-            Either::Left(_) => None,
-            Either::Right(r) => Some(r),
-        }
-    }
-
-    /// Get a readable reference to the left variant (if it exists).
-    pub fn left(&self) -> Option<&L> {
-        match self {
-            Either::Left(l) => Some(l),
-            Either::Right(_) => None,
-        }
-    }
-
-    /// Get a mutable reference to the left variant (if it exists).
-    pub fn left_mut(&mut self) -> Option<&mut L> {
-        match self {
-            Either::Left(l) => Some(l),
-            Either::Right(_) => None,
-        }
-    }
-}
 
 /// Wrapper for schema. This uses `Arc<RwLock<S>>` for interior
 /// mutability and differentiates raw schema from resolved schema

@@ -22,10 +22,11 @@ use actix_web::{
 };
 use paperclip_core::v2::{
     models::{
-        DefaultOperationRaw, DefaultPathItemRaw, DefaultSchemaRaw, HttpMethod, SecurityScheme,
+        DefaultOperationRaw, DefaultPathItemRaw, DefaultSchemaRaw, SecurityScheme,
     },
     schema::Apiv2Operation,
 };
+use paperclip_core::common::HttpMethod;
 
 use std::{collections::BTreeMap, fmt::Debug, future::Future, mem};
 

@@ -9,14 +9,16 @@ use crate::{
     error::PaperClipError,
     v2::{
         models::{
-            Coder, CollectionFormat, DataType, DataTypeFormat, Either, HttpMethod, Items,
-            MediaRange, ParameterIn, Reference, ResolvableApi, ResolvableOperation,
-            ResolvableParameter, ResolvablePathItem, ResolvableResponse, JSON_CODER, JSON_MIME,
-            YAML_CODER, YAML_MIME,
+            CollectionFormat, DataType, DataTypeFormat, Items,
+            ParameterIn, Reference, ResolvableApi, ResolvableOperation,
+            ResolvableParameter, ResolvablePathItem, ResolvableResponse,
         },
-        Schema,
+        Schema
     },
 };
+use paperclip_core::extensions::{MediaRange, Coder, JSON_CODER, JSON_MIME,
+                                 YAML_CODER, YAML_MIME};
+use paperclip_core::common::{Either, HttpMethod};
 use anyhow::Error;
 use heck::{ToPascalCase, ToSnakeCase};
 use http::{header::HeaderName, HeaderMap};

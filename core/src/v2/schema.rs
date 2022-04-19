@@ -1,7 +1,7 @@
 //! Traits used for code and spec generation.
 
 use super::models::{
-    DataType, DataTypeFormat, DefaultOperationRaw, DefaultSchemaRaw, Either, Resolvable,
+    DataType, DataTypeFormat, DefaultOperationRaw, DefaultSchemaRaw, Resolvable,
     SecurityScheme,
 };
 
@@ -441,6 +441,7 @@ macro_rules! impl_schema_map {
 }
 
 use std::collections::*;
+use crate::common::Either;
 
 impl_schema_array!(Vec<T>);
 impl_schema_array!(HashSet<T>);
