@@ -15,10 +15,10 @@ use crate::{
         },
         Schema
     },
+    extensions::{MediaRange, Coder, JSON_CODER, JSON_MIME,
+                   YAML_CODER, YAML_MIME},
+    common::{Either, HttpMethod}
 };
-use paperclip_core::extensions::{MediaRange, Coder, JSON_CODER, JSON_MIME,
-                                 YAML_CODER, YAML_MIME};
-use paperclip_core::common::{Either, HttpMethod};
 use anyhow::Error;
 use heck::{ToPascalCase, ToSnakeCase};
 use http::{header::HeaderName, HeaderMap};

@@ -138,12 +138,12 @@ pub fn emit_v2_schema_struct(input: TokenStream) -> TokenStream {
             }
 
             #[inline]
-            fn additional_properties(&self) -> Option<&paperclip::v2::models::Either<bool, paperclip::v2::models::Resolvable<Self>>> {
+            fn additional_properties(&self) -> Option<&paperclip::common::Either<bool, paperclip::v2::models::Resolvable<Self>>> {
                 self.extra_props.as_ref()
             }
 
             #[inline]
-            fn additional_properties_mut(&mut self) -> Option<&mut paperclip::v2::models::Either<bool, paperclip::v2::models::Resolvable<Self>>> {
+            fn additional_properties_mut(&mut self) -> Option<&mut paperclip::common::Either<bool, paperclip::v2::models::Resolvable<Self>>> {
                 self.extra_props.as_mut()
             }
 
@@ -310,7 +310,7 @@ fn schema_fields(name: &Ident, is_ref: bool) -> proc_macro2::TokenStream {
 
     gen.extend(quote!(
         #[serde(rename = "additionalProperties", skip_serializing_if = "Option::is_none")]
-        pub extra_props: Option<paperclip::v2::models::Either<bool,
+        pub extra_props: Option<paperclip::common::Either<bool,
     ));
     add_self(&mut gen);
     gen.extend(quote!(>>,));

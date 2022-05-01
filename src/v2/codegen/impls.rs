@@ -4,7 +4,7 @@ use super::{
     object::{ApiObject, ApiObjectBuilder, Response, StructField, TypeParameters},
     RUST_KEYWORDS,
 };
-use paperclip_core::extensions::{JSON_CODER, JSON_MIME};
+use crate::extensions::{JSON_CODER, JSON_MIME};
 use crate::v2::models::{CollectionFormat, ParameterIn};
 use heck::{ToKebabCase, ToSnakeCase};
 

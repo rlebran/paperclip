@@ -22,6 +22,9 @@ pub mod v2;
 pub mod v3;
 
 pub use self::error::ValidationError;
+pub use self::common::{HttpMethod, Either, SpecFormat};
+pub use self::version::Version;
+pub use self::extensions::MediaRange;
 
 #[cfg(all(feature = "actix2", feature = "actix3"))]
 compile_error!("feature \"actix2\" and feature \"actix3\" cannot be enabled at the same time");

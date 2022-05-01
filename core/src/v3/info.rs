@@ -21,8 +21,7 @@ pub struct Info {
     /// Inline extensions to this object.
     #[serde(
     flatten,
-    skip_serializing_if = "BTreeMap::is_empty",
-    deserialize_with = "crate::v2::extensions::deserialize_extensions"
+    skip_serializing_if = "BTreeMap::is_empty"
     )]
     pub extensions: BTreeMap<String, serde_json::Value>,
 }

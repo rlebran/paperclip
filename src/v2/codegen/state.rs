@@ -7,8 +7,8 @@ use super::{
 use crate::{
     error::PaperClipError,
     v2::models::{Coders},
+    common::SpecFormat
 };
-use paperclip_core::common::SpecFormat;
 use anyhow::Error;
 use heck::ToPascalCase;
 #[cfg(feature = "cli")]

@@ -45,7 +45,7 @@ pub struct Components<P, B, R> {
     // #[serde(default, rename = "pathItems", skip_serializing_if = "BTreeMap::is_empty")]
     // pub path_items: BTreeMap<String, Either<Reference, B>>, //@todo WTF ???
     /// Inline extensions to this object.
-    #[serde(flatten, deserialize_with = "crate::util::deserialize_extensions")]
+    #[serde(flatten)]
     pub extensions: BTreeMap<String, serde_json::Value>,
 }
 

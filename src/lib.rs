@@ -13,7 +13,7 @@ mod error;
 pub mod v2;
 
 pub use error::{PaperClipError, PaperClipResult};
-pub use paperclip_core::util;
+pub use paperclip_core::{util, common, extensions, version};
 #[cfg(feature = "v2")]
 pub use paperclip_macros::api_v2_schema_struct as api_v2_schema;
 
@@ -28,8 +28,6 @@ pub mod actix {
     pub use paperclip_core::v2::{
         AcceptedJson, CreatedJson, NoContent, OperationModifier, ResponderWrapper, ResponseWrapper,
     };
-    pub use paperclip_core::common;
-    pub use paperclip_core::extensions;
 
     #[cfg(feature = "actix4")]
     pub use paperclip_core::v2::HttpResponseWrapper;

@@ -10,7 +10,7 @@ pub struct SecurityScheme {
     pub type_: SecurityType,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,
-    #[serde(flatten, deserialize_with = "crate::util::deserialize_extensions")]
+    #[serde(flatten)]
     pub extensions: BTreeMap<String, serde_json::Value>,
 }
 

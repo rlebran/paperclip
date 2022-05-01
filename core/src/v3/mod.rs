@@ -50,7 +50,6 @@ pub struct Api<P, B, R, S> {
     #[serde(
     flatten,
     skip_serializing_if = "BTreeMap::is_empty",
-    deserialize_with = "crate::v2::extensions::deserialize_extensions"
     )]
     pub extensions: BTreeMap<String, serde_json::Value>,
 }

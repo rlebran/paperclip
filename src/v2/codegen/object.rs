@@ -10,8 +10,8 @@ use super::{
     RUST_KEYWORDS,
 };
 use crate::v2::models::{CollectionFormat, ParameterIn};
-use paperclip_core::extensions::Coder;
-use paperclip_core::common::HttpMethod;
+use crate::common::HttpMethod;
+use crate::extensions::Coder;
 use heck::{ToPascalCase, ToSnakeCase};
 use once_cell::sync::Lazy;
 use regex::{Captures, Regex};

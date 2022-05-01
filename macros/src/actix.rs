@@ -268,7 +268,7 @@ fn parse_operation_attrs(attrs: TokenStream) -> (Vec<Ident>, Vec<proc_macro2::To
                                         err
                                     );
                                 } else {
-                                    mime_types.push(quote!(paperclip::v2::models::MediaRange(#val.parse().unwrap())));
+                                    mime_types.push(quote!(paperclip::extensions::MediaRange(#val.parse().unwrap())));
                                 }
                             }
                             if !mime_types.is_empty() {
@@ -504,7 +504,7 @@ pub fn emit_v2_errors(attrs: TokenStream, input: TokenStream) -> TokenStream {
     let update_error_helper = quote! {
         fn update_error_definitions(code: &u16, description: &str, schema: &Option<&str>, op: &mut paperclip::v2::models::DefaultOperationRaw) {
             if let Some(schema) = &schema {
-                op.responses.insert(code.to_string(), paperclip::v2::models::Either::Right(paperclip::v2::models::Response {
+                op.responses.insert(code.to_string(), paperclip::common::Either::Right(paperclip::v2::models::Response {
                     description: Some(description.to_string()),
                     schema: Some(paperclip::v2::models::DefaultSchemaRaw {
                         name: Some(schema.to_string()),
@@ -514,7 +514,7 @@ pub fn emit_v2_errors(attrs: TokenStream, input: TokenStream) -> TokenStream {
                     ..Default::default()
                 }));
             } else {
-                op.responses.insert(code.to_string(), paperclip::v2::models::Either::Right(paperclip::v2::models::DefaultResponseRaw {
+                op.responses.insert(code.to_string(), paperclip::common::Either::Right(paperclip::v2::models::DefaultResponseRaw {
                     description: Some(description.to_string()),
                     ..Default::default()
                 }));
@@ -1605,7 +1605,7 @@ impl super::Method {
                 fn operations(
                     &mut self,
                 ) -> std::collections::BTreeMap<
-                    paperclip::v2::models::HttpMethod,
+                    paperclip::common::HttpMethod,
                     paperclip::v2::models::DefaultOperationRaw,
                 > {
                     Self::resource().operations()

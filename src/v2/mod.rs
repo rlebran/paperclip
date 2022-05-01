@@ -7,7 +7,8 @@
 //! can use the `DefaultSchema`.
 //!
 //! ```rust,no_run
-//! use paperclip::v2::{self, ResolvableApi, DefaultSchema, models::Version};
+//! use paperclip::v2::{self, ResolvableApi, DefaultSchema};
+//! use paperclip::version::Version;
 //!
 //! use std::fs::File;
 //!
@@ -90,7 +91,7 @@
 pub mod codegen;
 
 use crate::error::PaperClipError;
-use paperclip_core::common::SpecFormat;
+use crate::common::SpecFormat;
 use serde::Deserialize;
 
 use std::io::{Read, Seek, SeekFrom};
