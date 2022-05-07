@@ -56,7 +56,7 @@ pub struct Example {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub value: Option<String>,
+    pub value: Option<serde_json::Value>,
     #[serde(rename = "externalValue", skip_serializing_if = "Option::is_none")]
     pub external_value: Option<String>,
 }
