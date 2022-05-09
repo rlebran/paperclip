@@ -50,7 +50,9 @@ use crate::common::Either;
 /// and/or update the global map of definitions.
 pub trait OperationModifier: Apiv2Schema + Sized {
     /// Update the parameters list in the given operation (if needed).
-    fn update_parameter(_op: &mut DefaultOperationRaw) {}
+    fn update_parameter(op: &mut DefaultOperationRaw) {
+        update_parameter::<Self>(op);
+    }
 
     /// Update the responses map in the given operation (if needed).
     fn update_response(_op: &mut DefaultOperationRaw) {}
@@ -77,7 +79,9 @@ impl<T> OperationModifier for T
 where
     T: Apiv2Schema,
 {
-    default fn update_parameter(_op: &mut DefaultOperationRaw) {}
+    default fn update_parameter(op: &mut DefaultOperationRaw) {
+        update_parameter::<Self>(op);
+    }
 
     default fn update_response(_op: &mut DefaultOperationRaw) {}
 
@@ -687,6 +691,10 @@ where
     fn definitions() -> BTreeMap<String, DefaultSchemaRaw> {
         H::definitions()
     }
+
+    fn is_visible() -> bool {
+        H::is_visible()
+    }
 }
 
 /// Given the schema type, recursively update the map of definitions.
@@ -708,6 +716,15 @@ where
         }
 
         break;
+    }
+}
+
+fn update_parameter<T>(op: &mut DefaultOperationRaw)
+where
+    T: Apiv2Schema,
+{
+    for parameter in T::header_parameter_schema() {
+        op.parameters.push(Either::Right(parameter))
     }
 }
 
