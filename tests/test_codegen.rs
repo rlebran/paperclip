@@ -192,8 +192,7 @@ mod tests_pet {
 #[cfg(test)]
 mod tests_k8s {
     use super::*;
-    use paperclip::common::HttpMethod;
-    use paperclip::version::Version;
+    use paperclip::{common::HttpMethod, version::Version};
 
     #[test]
     fn test_definition_ref_cycles() {

@@ -1,4 +1,4 @@
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 /// OpenAPI version.
 #[derive(Clone, Copy, Debug, Serialize, Deserialize, Eq, PartialEq)]

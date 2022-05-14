@@ -4,11 +4,7 @@ use super::{
     template::{self, TEMPLATE},
     CrateMeta, EmitMode,
 };
-use crate::{
-    error::PaperClipError,
-    v2::models::{Coders},
-    common::SpecFormat
-};
+use crate::{common::SpecFormat, error::PaperClipError, v2::models::Coders};
 use anyhow::Error;
 use heck::ToPascalCase;
 #[cfg(feature = "cli")]

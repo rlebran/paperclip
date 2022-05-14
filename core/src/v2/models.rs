@@ -1,12 +1,9 @@
 //! Models used by OpenAPI v2.
 
-pub use super::extensions::{
-    Coders,
-};
+pub use super::extensions::Coders;
 
 use super::schema::Schema;
-use crate::error::ValidationError;
-use crate::version::Version;
+use crate::{error::ValidationError, version::Version};
 use once_cell::sync::Lazy;
 use paperclip_macros::api_v2_schema_struct;
 use regex::{Captures, Regex};
@@ -206,10 +203,7 @@ pub struct Api<P, R, S> {
     pub spec_format: SpecFormat,
     pub info: Info,
 
-    #[serde(
-        flatten,
-        skip_serializing_if = "BTreeMap::is_empty",
-    )]
+    #[serde(flatten, skip_serializing_if = "BTreeMap::is_empty")]
     pub extensions: BTreeMap<String, serde_json::Value>,
 }
 
@@ -225,8 +219,10 @@ impl<P, R, S> Api<P, R, S> {
 }
 
 use crate as paperclip;
-use crate::common::{Either, HttpMethod, SpecFormat};
-use crate::extensions::MediaRange; // hack for proc macro
+use crate::{
+    common::{Either, HttpMethod, SpecFormat},
+    extensions::MediaRange,
+}; // hack for proc macro
 
 /// Default schema if your schema doesn't have any custom fields.
 ///
@@ -249,10 +245,7 @@ pub struct Info {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub license: Option<License>,
     /// Inline extensions to this object.
-    #[serde(
-        flatten,
-        skip_serializing_if = "BTreeMap::is_empty",
-    )]
+    #[serde(flatten, skip_serializing_if = "BTreeMap::is_empty")]
     pub extensions: BTreeMap<String, serde_json::Value>,
 }
 

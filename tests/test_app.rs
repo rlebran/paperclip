@@ -2759,7 +2759,6 @@ fn test_operations_macro_attributes() {
     #[derive(Serialize, Deserialize, Apiv2Schema)]
     struct Params {
         limit: Option<u16>,
-
     }
 
     /// List all pets (in summary)

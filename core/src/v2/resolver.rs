@@ -1,16 +1,12 @@
 use super::{
-    models::{
-        Reference, Resolvable, ResolvableParameter, ResolvablePathItem,
-        ResolvableResponse,
-    },
+    models::{Reference, Resolvable, ResolvableParameter, ResolvablePathItem, ResolvableResponse},
     Schema,
 };
 use crate::error::ValidationError;
 use heck::ToPascalCase;
 
+use crate::common::{Either, HttpMethod};
 use std::{cell::RefCell, collections::BTreeMap, mem};
-use crate::common::Either;
-use crate::common::HttpMethod;
 
 // FIXME: The resolver is not in its best. It "just" works atm.
 

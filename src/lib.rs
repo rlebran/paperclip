@@ -13,7 +13,7 @@ mod error;
 pub mod v2;
 
 pub use error::{PaperClipError, PaperClipResult};
-pub use paperclip_core::{util, common, extensions, version};
+pub use paperclip_core::{common, extensions, util, version};
 #[cfg(feature = "v2")]
 pub use paperclip_macros::api_v2_schema_struct as api_v2_schema;
 

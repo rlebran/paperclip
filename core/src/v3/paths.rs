@@ -1,7 +1,9 @@
-use std::collections::BTreeMap;
+use crate::{
+    common::{Either, HttpMethod},
+    v3::server::Server,
+};
 use serde::{Deserialize, Serialize};
-use crate::common::{Either, HttpMethod};
-use crate::v3::server::Server;
+use std::collections::BTreeMap;
 
 /// Path item object.
 ///
@@ -40,7 +42,11 @@ pub struct Operation<P, B, R> {
     pub operation_id: Option<String>,
     #[serde(default = "Vec::default", skip_serializing_if = "Vec::is_empty")]
     pub parameters: Vec<Either<Reference, P>>,
-    #[serde(rename = "requestBody", default = "Vec::default", skip_serializing_if = "Vec::is_empty")]
+    #[serde(
+        rename = "requestBody",
+        default = "Vec::default",
+        skip_serializing_if = "Vec::is_empty"
+    )]
     pub request_body: Vec<Either<Reference, B>>,
     #[serde(default = "BTreeMap::default")]
     pub responses: BTreeMap<String, Either<Reference, R>>,
@@ -57,7 +63,7 @@ pub struct Operation<P, B, R> {
 pub struct ExternalDoc {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,
-    pub url: url::Url
+    pub url: url::Url,
 }
 
 #[derive(Clone, Debug, Default, Serialize, Deserialize, PartialEq)]

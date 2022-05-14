@@ -37,6 +37,7 @@ use serde::Serialize;
 #[cfg(feature = "serde_qs")]
 use serde_qs::actix::QsQuery;
 
+use crate::common::Either;
 use std::{
     collections::BTreeMap,
     fmt,
@@ -44,7 +45,6 @@ use std::{
     pin::Pin,
     task::{Context, Poll},
 };
-use crate::common::Either;
 
 /// Actix-specific trait for indicating that this entity can modify an operation
 /// and/or update the global map of definitions.

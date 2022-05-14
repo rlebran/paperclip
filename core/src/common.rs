@@ -1,6 +1,6 @@
-use std::sync::Arc;
+use crate::extensions::{Coder, MediaRange, JSON_CODER, JSON_MIME, YAML_CODER, YAML_MIME};
 use serde::{Deserialize, Serialize};
-use crate::extensions::{Coder, JSON_CODER, JSON_MIME, MediaRange, YAML_CODER, YAML_MIME};
+use std::sync::Arc;
 
 /// The HTTP method used for an operation.
 #[derive(Clone, Copy, Debug, Serialize, Deserialize, Eq, PartialEq, Ord, PartialOrd)]
@@ -14,7 +14,7 @@ pub enum HttpMethod {
     Head,
     Patch,
     #[cfg(feature = "v3")]
-    Trace
+    Trace,
 }
 
 impl HttpMethod {
@@ -66,8 +66,6 @@ impl<L, R> Either<L, R> {
         }
     }
 }
-
-
 
 /// The format used by spec (JSON/YAML).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

@@ -1,7 +1,5 @@
-use crate::Either;
-use crate::v2::models::DataType;
-use crate::v3::paths::Reference;
-use serde::{Serialize, Deserialize};
+use crate::{v2::models::DataType, v3::paths::Reference, Either};
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
 #[serde(rename_all = "camelCase")]
@@ -99,7 +97,7 @@ pub struct AnySchema {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub maximum: Option<f64>,
     #[serde(default, skip_serializing_if = "IndexMap::is_empty")]
-    pub properties: IndexMap<String, ReferenceOr<Box<Schema>>>,
+    pub properties: IndexMap<String, Box<Either<Reference, Schema>>>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub required: Vec<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -109,7 +107,7 @@ pub struct AnySchema {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub max_properties: Option<usize>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub items: Option<ReferenceOr<Box<Schema>>>,
+    pub items: Option<Box<Either<Reference, Schema>>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub min_items: Option<usize>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -191,7 +189,7 @@ pub struct IntegerType {
 #[serde(rename_all = "camelCase")]
 pub struct ObjectType {
     #[serde(default, skip_serializing_if = "IndexMap::is_empty")]
-    pub properties: IndexMap<String, ReferenceOr<Box<Schema>>>,
+    pub properties: IndexMap<String, Box<Either<Reference, Schema>>>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub required: Vec<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -206,7 +204,7 @@ pub struct ObjectType {
 #[serde(rename_all = "camelCase")]
 pub struct ArrayType {
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub items: Option<ReferenceOr<Box<Schema>>>,
+    pub items: Option<Box<Either<Reference, Schema>>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub min_items: Option<usize>,
     #[serde(skip_serializing_if = "Option::is_none")]

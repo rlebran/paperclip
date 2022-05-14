@@ -1,8 +1,7 @@
 //! Traits used for code and spec generation.
 
 use super::models::{
-    DataType, DataTypeFormat, DefaultOperationRaw, DefaultSchemaRaw, Resolvable,
-    SecurityScheme,
+    DataType, DataTypeFormat, DefaultOperationRaw, DefaultSchemaRaw, Resolvable, SecurityScheme,
 };
 
 use std::collections::{BTreeMap, BTreeSet};
@@ -467,8 +466,8 @@ macro_rules! impl_schema_map {
 }
 
 use crate::v2::models::Parameter;
-use std::collections::*;
 use crate::common::Either;
+use std::collections::*;
 
 impl_schema_array!(Vec<T>);
 impl_schema_array!(HashSet<T>);

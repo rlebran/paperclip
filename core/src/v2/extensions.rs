@@ -1,11 +1,11 @@
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
+use crate::extensions::{Coder, MediaRange};
 use std::{
     collections::BTreeMap,
     ops::{Deref, DerefMut},
     sync::Arc,
 };
-use crate::extensions::{Coder, MediaRange};
 
 /// `x-rust-coders` global extension for custom encoders and decoders.
 #[derive(Debug, Default, Clone)]
@@ -66,8 +66,8 @@ impl DerefMut for Coders {
 
 impl Serialize for Coders {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-        where
-            S: Serializer,
+    where
+        S: Serializer,
     {
         self.0.serialize(serializer)
     }
@@ -75,8 +75,8 @@ impl Serialize for Coders {
 
 impl<'de> Deserialize<'de> for Coders {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-        where
-            D: Deserializer<'de>,
+    where
+        D: Deserializer<'de>,
     {
         Ok(Coders(BTreeMap::deserialize(deserializer)?))
     }

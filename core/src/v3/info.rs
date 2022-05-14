@@ -1,5 +1,5 @@
+use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
-use serde::{Serialize, Deserialize};
 
 /// Info object.
 ///
@@ -19,10 +19,7 @@ pub struct Info {
     #[serde(rename = "termsOfService", skip_serializing_if = "Option::is_none")]
     pub terms_of_service: Option<url::Url>,
     /// Inline extensions to this object.
-    #[serde(
-    flatten,
-    skip_serializing_if = "BTreeMap::is_empty"
-    )]
+    #[serde(flatten, skip_serializing_if = "BTreeMap::is_empty")]
     pub extensions: BTreeMap<String, serde_json::Value>,
 }
 
@@ -54,5 +51,5 @@ pub struct License {
 #[serde(rename_all = "lowercase")]
 pub enum LicenseOrIdentifier {
     Url(url::Url),
-    Identifier(String)
+    Identifier(String),
 }

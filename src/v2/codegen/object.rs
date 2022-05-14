@@ -9,9 +9,11 @@ use super::{
     emitter::{ANY_GENERIC_PARAMETER, EXTRA_PROPS_FIELD, FILE_MARKER},
     RUST_KEYWORDS,
 };
-use crate::v2::models::{CollectionFormat, ParameterIn};
-use crate::common::HttpMethod;
-use crate::extensions::Coder;
+use crate::{
+    common::HttpMethod,
+    extensions::Coder,
+    v2::models::{CollectionFormat, ParameterIn},
+};
 use heck::{ToPascalCase, ToSnakeCase};
 use once_cell::sync::Lazy;
 use regex::{Captures, Regex};

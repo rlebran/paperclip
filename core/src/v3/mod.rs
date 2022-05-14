@@ -1,13 +1,17 @@
 #![cfg(feature = "v3")]
 
+use crate::{
+    common::SpecFormat,
+    v3::{
+        components::{schema::Schema, Components},
+        info::Info,
+        paths::PathItem,
+        server::Server,
+        tags::{ExternalDocs, Tag},
+    },
+    version::Version,
+};
 use std::collections::{BTreeMap, BTreeSet};
-use crate::common::SpecFormat;
-use crate::v3::components::Components;
-use crate::v3::info::Info;
-use crate::v3::paths::PathItem;
-use crate::v3::server::Server;
-use crate::v3::tags::{ExternalDocs, Tag};
-use crate::version::Version;
 
 mod components;
 
@@ -16,6 +20,8 @@ mod paths;
 mod security;
 mod server;
 mod tags;
+
+pub type DefaultResponseRaw = Response<Schema>;
 
 /// OpenAPI v3 spec with defaults.
 pub type DefaultApiRaw = Api<DefaultParameterRaw, DefaultResponseRaw, DefaultSchemaRaw>;
@@ -34,7 +40,7 @@ pub struct Api<P, B, R, S> {
     #[serde(default = "BTreeMap::new")]
     pub paths: BTreeMap<String, PathItem<P, B, R>>,
     // pub webhooks //@todo support webhooks / callback. See: https://github.com/OAI/OpenAPI-Specification/blob/main/versions/3.1.0.md#oasDocument
-    pub components: Components<P, B, R>,
+    pub components: Components<P, B, R, S>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub security: Vec<BTreeMap<String, BTreeSet<String>>>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -47,9 +53,6 @@ pub struct Api<P, B, R, S> {
     #[serde(skip)]
     pub spec_format: SpecFormat,
 
-    #[serde(
-    flatten,
-    skip_serializing_if = "BTreeMap::is_empty",
-    )]
+    #[serde(flatten, skip_serializing_if = "BTreeMap::is_empty")]
     pub extensions: BTreeMap<String, serde_json::Value>,
 }

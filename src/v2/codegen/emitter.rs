@@ -6,18 +6,17 @@ use super::{
     CrateMeta,
 };
 use crate::{
+    common::{Either, HttpMethod},
     error::PaperClipError,
+    extensions::{Coder, MediaRange, JSON_CODER, JSON_MIME, YAML_CODER, YAML_MIME},
     v2::{
         models::{
-            CollectionFormat, DataType, DataTypeFormat, Items,
-            ParameterIn, Reference, ResolvableApi, ResolvableOperation,
-            ResolvableParameter, ResolvablePathItem, ResolvableResponse,
+            CollectionFormat, DataType, DataTypeFormat, Items, ParameterIn, Reference,
+            ResolvableApi, ResolvableOperation, ResolvableParameter, ResolvablePathItem,
+            ResolvableResponse,
         },
-        Schema
+        Schema,
     },
-    extensions::{MediaRange, Coder, JSON_CODER, JSON_MIME,
-                   YAML_CODER, YAML_MIME},
-    common::{Either, HttpMethod}
 };
 use anyhow::Error;
 use heck::{ToPascalCase, ToSnakeCase};

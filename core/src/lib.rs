@@ -10,21 +10,23 @@ extern crate actix_web4 as actix_web;
 #[cfg_attr(feature = "v2", macro_use)]
 extern crate serde;
 
-mod error;
 pub mod common;
+mod error;
 pub mod extensions;
 pub mod im;
 pub mod util;
-pub mod version;
 #[cfg(feature = "v2")]
 pub mod v2;
 #[cfg(feature = "v3")]
 pub mod v3;
+pub mod version;
 
-pub use self::error::ValidationError;
-pub use self::common::{HttpMethod, Either, SpecFormat};
-pub use self::version::Version;
-pub use self::extensions::MediaRange;
+pub use self::{
+    common::{Either, HttpMethod, SpecFormat},
+    error::ValidationError,
+    extensions::MediaRange,
+    version::Version,
+};
 
 #[cfg(all(feature = "actix2", feature = "actix3"))]
 compile_error!("feature \"actix2\" and feature \"actix3\" cannot be enabled at the same time");

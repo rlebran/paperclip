@@ -1,8 +1,6 @@
-use std::cmp::Ordering;
-use std::fmt;
-use std::sync::Arc;
 use once_cell::sync::Lazy;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use std::{cmp::Ordering, fmt, sync::Arc};
 
 /// Media range for JSON.
 pub static JSON_MIME: Lazy<MediaRange> =
@@ -96,8 +94,8 @@ impl Ord for MediaRange {
 
 impl Serialize for MediaRange {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-        where
-            S: Serializer,
+    where
+        S: Serializer,
     {
         serializer.serialize_str(self.0.as_ref())
     }
@@ -105,8 +103,8 @@ impl Serialize for MediaRange {
 
 impl<'de> Deserialize<'de> for MediaRange {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-        where
-            D: Deserializer<'de>,
+    where
+        D: Deserializer<'de>,
     {
         struct Visitor;
 
@@ -118,8 +116,8 @@ impl<'de> Deserialize<'de> for MediaRange {
             }
 
             fn visit_str<E>(self, value: &str) -> Result<MediaRange, E>
-                where
-                    E: serde::de::Error,
+            where
+                E: serde::de::Error,
             {
                 value.parse().map_err(E::custom).map(MediaRange)
             }

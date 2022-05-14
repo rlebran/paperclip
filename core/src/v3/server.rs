@@ -1,5 +1,5 @@
-use std::collections::BTreeMap;
 use serde::{Deserialize, Serialize};
+use std::collections::BTreeMap;
 
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
 pub struct Server {
@@ -16,5 +16,5 @@ pub struct ServerVariable {
     pub enum_: Vec<String>,
     pub default: String,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub description: Option<String>
+    pub description: Option<String>,
 }

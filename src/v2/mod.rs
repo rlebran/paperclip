@@ -90,8 +90,7 @@
 #[cfg(feature = "codegen")]
 pub mod codegen;
 
-use crate::error::PaperClipError;
-use crate::common::SpecFormat;
+use crate::{common::SpecFormat, error::PaperClipError};
 use serde::Deserialize;
 
 use std::io::{Read, Seek, SeekFrom};
@@ -103,7 +102,7 @@ pub use paperclip_core::{
     v2::{
         models::{self, DefaultSchema, ResolvableApi},
         schema::{self, Schema},
-    }
+    },
 };
 
 /// Deserialize the schema from the given reader. Currently, this only supports

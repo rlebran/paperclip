@@ -1,11 +1,13 @@
+use crate::{
+    common::Either,
+    v3::{components::schema::Schema, paths::Reference, security::SecurityScheme, server::Server},
+};
 use std::collections::BTreeMap;
-use crate::common::Either;
-use crate::v3::components::schema::Schema;
-use crate::v3::paths::Reference;
-use crate::v3::security::SecurityScheme;
-use crate::v3::server::Server;
 
-mod schema;
+pub mod header;
+pub mod parameter;
+pub mod response;
+pub mod schema;
 
 /// Holds a set of reusable objects for different aspects of the OAS.
 /// All objects defined within the components object will have no effect
@@ -13,10 +15,10 @@ mod schema;
 /// outside the components object.
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
 #[serde(rename_all = "camelCase")]
-pub struct Components<P, B, R> {
+pub struct Components<P, B, R, S> {
     /// An object to hold reusable Schema Objects.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-    pub schemas: BTreeMap<String, Schema>,
+    pub schemas: BTreeMap<String, S>,
     /// An object to hold reusable Response Objects.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
     pub responses: BTreeMap<String, Either<Reference, R>>,
@@ -67,7 +69,11 @@ pub struct Link {
     pub operation_identifier: LinkOperationIdentifier,
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
     pub parameters: BTreeMap<String, String>,
-    #[serde(default, skip_serializing_if = "BTreeMap::is_empty", rename = "requestBody")]
+    #[serde(
+        default,
+        skip_serializing_if = "BTreeMap::is_empty",
+        rename = "requestBody"
+    )]
     pub request_body: BTreeMap<String, String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,
@@ -80,5 +86,5 @@ pub enum LinkOperationIdentifier {
     #[serde(rename = "operationId")]
     Id,
     #[serde(rename = "operationRef")]
-    Ref
+    Ref,
 }

@@ -1,5 +1,5 @@
-use std::collections::BTreeMap;
 use serde::{Deserialize, Serialize};
+use std::collections::BTreeMap;
 
 /// Security Scheme object.
 ///
@@ -25,7 +25,7 @@ pub enum SecurityType {
     #[serde(rename = "oauth2")]
     Oauth2(Oauth2Security),
     #[serde(rename = "openIdConnect")]
-    OpenIdConnect(OpenIdConnectSecurity)
+    OpenIdConnect(OpenIdConnectSecurity),
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]

@@ -21,13 +21,13 @@ use actix_web::{
     http::Method,
     Error, FromRequest, Responder,
 };
-use paperclip_core::v2::{
-    models::{
-        DefaultOperationRaw, DefaultPathItemRaw, DefaultSchemaRaw, SecurityScheme,
+use paperclip_core::{
+    common::HttpMethod,
+    v2::{
+        models::{DefaultOperationRaw, DefaultPathItemRaw, DefaultSchemaRaw, SecurityScheme},
+        schema::Apiv2Operation,
     },
-    schema::Apiv2Operation,
 };
-use paperclip_core::common::HttpMethod;
 
 use std::{collections::BTreeMap, fmt::Debug, future::Future, mem};
 

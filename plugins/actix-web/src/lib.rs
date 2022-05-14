@@ -36,10 +36,10 @@ pub use paperclip_macros::{
     Apiv2Header, Apiv2Schema, Apiv2Security,
 };
 
-use paperclip_core::v2::models::{
-    DefaultOperationRaw, DefaultPathItemRaw, DefaultSchemaRaw, SecurityScheme,
+use paperclip_core::{
+    common::HttpMethod,
+    v2::models::{DefaultOperationRaw, DefaultPathItemRaw, DefaultSchemaRaw, SecurityScheme},
 };
-use paperclip_core::common::HttpMethod;
 
 use std::collections::BTreeMap;
 
